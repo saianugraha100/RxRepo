@@ -8,8 +8,10 @@
 import fs from "fs";
 import path from "path";
 import PDFDocument from 'pdfkit';
+import concat from 'concat-stream';
 import * as rxDataController from "../controllers/rxdata.controller.js";
 import { db } from "../models/index.js";
+import { getBlobClient } from "../util/azure-blob-storage.js";
 
 const rxDataModel = db.rxData;
 export const routes = (app: any) => {
@@ -26,23 +28,24 @@ export const routes = (app: any) => {
     app.get('/RxData/PdfView/:id', async (req: any, res: any) => {
         const rx: any = await rxDataModel.findByPk(req.params.id);
         console.log(rx);
-        const pdfFile = path.resolve(`./documents/${rx.id}.pdf`)
+        const pdfFile = `${rx.id}.pdf`;
+        const blobClient = getBlobClient(process.env["DOCUMENTS_CONTAINER"], pdfFile);
         console.log(pdfFile);
-        if (!fs.existsSync(pdfFile)) { 
+        const exists: any = await blobClient.exists();
+        if (!exists) { 
             console.log(`File ${pdfFile} not exists.`)
-            generatePdf(req, res, rx, pdfFile);
+            await generatePdf(req, res, rx, pdfFile, blobClient);
         }
         else {
             console.log(`File ${pdfFile} already exists.`)
-            fs.readFile(pdfFile, (err, data) => {
-                res.contentType("application/pdf");
-                res.send(data);
-            });
+            const blobResponse = await blobClient.download();
+            res.contentType("application/pdf");
+            blobResponse.readableStreamBody.pipe(res);
         }
     });
 }
 
-const generatePdf = (req: any, res: any, rxData: any, pdfFile: any) => {
+const generatePdf = async (req: any, res: any, rxData: any, pdfFile: any, blobClient: any) => {
     // Create a document
     const doc = new PDFDocument({font: 'Times-Roman'});
 
@@ -106,8 +109,13 @@ const generatePdf = (req: any, res: any, rxData: any, pdfFile: any) => {
     // Finalize PDF file
     doc.end();
     // Saving the pdf file in root directory.
-    doc.pipe(fs.createWriteStream(pdfFile));
-    // doc.write(pdfFile);
+    // doc.pipe(fs.createWriteStream(pdfFile));
+    doc.pipe(concat(async(buffer: any) => {
+        // const base64Data = buffer.toString('base64');
+        const uploadResponse = await blobClient.upload(buffer, buffer.length);
+        console.log(uploadResponse);
+        // do something with the string here...
+    }));
     res.contentType("application/pdf");
     doc.pipe(res);
 }
