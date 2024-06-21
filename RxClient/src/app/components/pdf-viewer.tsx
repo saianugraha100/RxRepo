@@ -10,7 +10,7 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 export default function PdfViewer(props: any) {
     console.log(props.rx);
-    const url = `http://localhost:8080/RxData/PdfView/${props.rx.id}`;
+    const url = `/api/rx-data/pdf-view/${props.rx.id}`;
     // Create new plugin instance
     const defaultLayoutPluginInstance = defaultLayoutPlugin();
     return(

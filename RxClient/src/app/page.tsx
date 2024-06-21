@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import Link from 'next/link';
 
 export default function Home() {
+  const rxListUrl = "/api/rx-data";
+  console.log("Url:", rxListUrl);
   let [rxList, setRxList] = useState([]);
   useEffect(() => {
-    fetch("http://localhost:8080/RxData")
+    fetch(rxListUrl)
     .then(response => response.json())
     .then(data =>  setRxList(data))
   },[])
