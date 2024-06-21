@@ -12,24 +12,30 @@ services:
     ports:
       - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
     command: -p $POSTGRESDB_LOCAL_PORT
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5433"]
+      # test: "nc -zv localhost 5433"
+      timeout: 20s
+      retries: 10
     volumes:
       - db:/var/lib/postgres
-  # app:
-  #   depends_on:
-  #     - postgresdb
-  #   build: ./RxServer
-  #   restart: unless-stopped
-  #   env_file: ./.env
-  #   ports:
-  #     - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
-  #   environment:
-  #     - DB_HOST=postgresdb
-  #     - DB_USER=$POSTGRESDB_USER
-  #     - DB_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
-  #     - DB_NAME=$POSTGRESDB_DATABASE
-  #     - DB_PORT=$POSTGRESDB_DOCKER_PORT
-  #   stdin_open: true
-  #   tty: true
+  app:
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    build: ./RxServer
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+    environment:
+      - DB_HOST=postgresdb
+      - DB_USER=$POSTGRESDB_USER
+      - DB_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
+      - DB_NAME=$POSTGRESDB_DATABASE
+      - DB_PORT=$POSTGRESDB_DOCKER_PORT
+    stdin_open: true
+    tty: true
 
 volumes: 
   db:
