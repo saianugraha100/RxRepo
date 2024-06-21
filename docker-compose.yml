@@ -47,7 +47,7 @@ services:
     ports:
       - $REACT_LOCAL_PORT:$REACT_DOCKER_PORT
     environment:
-      - RX_API_BASE_URL=http://app:$NODE_LOCAL_PORT
+      - RX_API_BASE_URL=http://app:$NODE_DOCKER_PORT
     stdin_open: true
     tty: true
 volumes: 
