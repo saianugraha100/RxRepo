@@ -37,5 +37,18 @@ services:
     stdin_open: true
     tty: true
 
+  client:
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    build: ./RxClient
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - $REACT_LOCAL_PORT:$REACT_DOCKER_PORT
+    environment:
+      - RX_API_BASE_URL=http://app:$NODE_LOCAL_PORT
+    stdin_open: true
+    tty: true
 volumes: 
   db:

@@ -3,11 +3,17 @@ import PdfViewer from "@/app/components/pdf-viewer";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
 
-export default function RxDetail({ params }) {
+type Data = {
+  id: string;
+  synopsis: string;
+  dosage: string;
+  description: string;
+}
+export default function RxDetail({ params }: any) {
   console.log(`Parameter id: ${params.id}`);
-  let [rx, setRx] = useState(null);
+  let [rx, setRx] = useState<Data | null>(null);
   useEffect(() => {
-    fetch(`http://localhost:8080/RxData/${params.id}`)
+    fetch(`/api/rx-data/${params.id}`)
     .then(response => response.json())
     .then(data => { console.log(data); setRx(data);})
   },[])
